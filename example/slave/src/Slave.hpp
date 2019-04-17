@@ -109,6 +109,8 @@ public:
 
         //std::shared_ptr<Output_t> caus_y = make_Output_ptr<float64_t>();
         std::shared_ptr<Output_t> caus_y = make_Output_String_ptr();
+		caus_y->String->maxSize = std::make_shared<uint32_t>(2000);
+		caus_y->String->start = std::make_shared<std::string>("foo_out");
         slaveDescription.Variables.push_back(make_Variable_output("y", y_vr, caus_y));
         std::shared_ptr<CommonCausality_t> caus_a =
                 make_CommonCausality_ptr<float64_t>();
