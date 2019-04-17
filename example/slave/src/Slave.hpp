@@ -19,7 +19,11 @@ class Slave {
 public:
     Slave() : stdLog(std::cout) {
         udpDriver = new UdpDriver(HOST, PORT);
-        manager = new DcpManagerSlave(getSlaveDescription(), udpDriver->getDcpDriver());
+		std::cout<< "GetSlaveDesciption: " << std::endl;
+		SlaveDescription_t m_SlaveDescription = getSlaveDescription();
+		std::cout<< "Done. Create Manager:" << std::endl;
+		manager = new DcpManagerSlave(m_SlaveDescription, udpDriver->getDcpDriver());
+		std::cout<< "Done" << std::endl;
         manager->setInitializeCallback<SYNC>(
                 std::bind(&Slave::initialize, this));
         manager->setConfigureCallback<SYNC>(
@@ -91,10 +95,10 @@ public:
         ;
         slaveDescription.TransportProtocols.UDP_IPv4->DAT_input_output = make_DAT_ptr();
         slaveDescription.TransportProtocols.UDP_IPv4->DAT_input_output->availablePortRanges.push_back(
-                make_AvailablePortRange(2048, 65535));
+                make_AviablePortRange(2048, 65535));
         slaveDescription.TransportProtocols.UDP_IPv4->DAT_parameter = make_DAT_ptr();
         slaveDescription.TransportProtocols.UDP_IPv4->DAT_parameter->availablePortRanges.push_back(
-                make_AvailablePortRange(2048, 65535));
+                make_AviablePortRange(2048, 65535));
         slaveDescription.CapabilityFlags.canAcceptConfigPdus = true;
         slaveDescription.CapabilityFlags.canHandleReset = true;
         slaveDescription.CapabilityFlags.canHandleVariableSteps = true;
@@ -103,7 +107,8 @@ public:
         slaveDescription.CapabilityFlags.canProvideLogOnRequest = true;
         slaveDescription.CapabilityFlags.canProvideLogOnNotification = true;
 
-        std::shared_ptr<Output_t> caus_y = make_Output_ptr<float64_t>();
+        //std::shared_ptr<Output_t> caus_y = make_Output_ptr<float64_t>();
+        std::shared_ptr<Output_t> caus_y = make_Output_String_ptr();
         slaveDescription.Variables.push_back(make_Variable_output("y", y_vr, caus_y));
         std::shared_ptr<CommonCausality_t> caus_a =
                 make_CommonCausality_ptr<float64_t>();
