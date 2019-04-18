@@ -77,16 +77,18 @@ private:
 
         manager->CFG_scope(1, 1, DcpScope::Initialization_Run_NonRealTime);
 
-        manager->CFG_input(1, 1, 0, slaveDescription->Variables.at(1).valueReference, DcpDataType::float64);
+
+        manager->CFG_input(1, 1, 0, slaveDescription->Variables.at(1).valueReference, DcpDataType::string);
         manager->CFG_output(1, 1, 0, slaveDescription->Variables.at(0).valueReference);
 
         manager->CFG_steps(1, 1, 1);
+		const uint16_t port = 60000;
         manager->CFG_time_res(1, slaveDescription->TimeRes.resolutions.front().numerator,
                                  slaveDescription->TimeRes.resolutions.front().denominator);
         manager->CFG_source_network_information_UDP(1, 1, asio::ip::address_v4::from_string(
-                        *slaveDescription->TransportProtocols.UDP_IPv4->Control->host).to_ulong(), *slaveDescription->TransportProtocols.UDP_IPv4->Control->port);
+                        *slaveDescription->TransportProtocols.UDP_IPv4->Control->host).to_ulong(), port);
         manager->CFG_target_network_information_UDP(1, 1,  asio::ip::address_v4::from_string(
-                *slaveDescription->TransportProtocols.UDP_IPv4->Control->host).to_ulong(), *slaveDescription->TransportProtocols.UDP_IPv4->Control->port);
+                *slaveDescription->TransportProtocols.UDP_IPv4->Control->host).to_ulong(), port);
         numOfCmd[1] = 7;
     }
 

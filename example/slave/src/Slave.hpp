@@ -55,12 +55,14 @@ public:
         simulationTime = 0;
         currentStep = 0;
 
-        a = manager->getInput<float64_t *>(a_vr);
-        y = manager->getOutput<float64_t *>(y_vr);
+        //a = manager->getInput<float64_t *>(a_vr);
+        a = manager->getInput<std::string *>(a_vr);
+        //y = manager->getOutput<float64_t *>(y_vr);
+        y = manager->getOutput<std::string *>(y_vr);
     }
 
     void initialize() {
-        *y = std::sin(currentStep + *a);
+        //*y = std::sin(currentStep + *a);
     }
 
     void doStep(uint64_t steps) {
@@ -68,9 +70,16 @@ public:
                 ((double) numerator) / ((double) denominator) * ((double) steps);
 
 
-        *y = std::sin(currentStep + *a);
+        //*y = std::sin(currentStep + *a);
+		std::string tmp = "foo";
+		//*y = tmp;
+		std::cout << "Value of output " << *y << std::endl;
+		std::cout << "Value of input"   << *a << std::endl;
 
-        manager->Log(SIM_LOG, simulationTime, currentStep, *a, *y);
+		//tmp = *a;
+		//*y = tmp + "a";
+
+        //manager->Log(SIM_LOG, simulationTime, currentStep, *a, *y);
         simulationTime += timeDiff;
         currentStep += steps;
     }
@@ -95,10 +104,10 @@ public:
         ;
         slaveDescription.TransportProtocols.UDP_IPv4->DAT_input_output = make_DAT_ptr();
         slaveDescription.TransportProtocols.UDP_IPv4->DAT_input_output->availablePortRanges.push_back(
-                make_AviablePortRange(2048, 65535));
+                make_AvailablePortRange(2048, 65535));
         slaveDescription.TransportProtocols.UDP_IPv4->DAT_parameter = make_DAT_ptr();
         slaveDescription.TransportProtocols.UDP_IPv4->DAT_parameter->availablePortRanges.push_back(
-                make_AviablePortRange(2048, 65535));
+                make_AvailablePortRange(2048, 65535));
         slaveDescription.CapabilityFlags.canAcceptConfigPdus = true;
         slaveDescription.CapabilityFlags.canHandleReset = true;
         slaveDescription.CapabilityFlags.canHandleVariableSteps = true;
@@ -110,12 +119,22 @@ public:
         //std::shared_ptr<Output_t> caus_y = make_Output_ptr<float64_t>();
         std::shared_ptr<Output_t> caus_y = make_Output_String_ptr();
 		caus_y->String->maxSize = std::make_shared<uint32_t>(2000);
-		caus_y->String->start = std::make_shared<std::string>("foo_out");
+		caus_y->String->start = std::make_shared<std::string>("output_start");
         slaveDescription.Variables.push_back(make_Variable_output("y", y_vr, caus_y));
+        //std::shared_ptr<CommonCausality_t> caus_a =
+        //        make_CommonCausality_ptr<float64_t>();
+        //caus_a->Float64->start = std::make_shared<std::vector<float64_t>>();
+        //caus_a->Float64->start->push_back(10.0);
+
         std::shared_ptr<CommonCausality_t> caus_a =
-                make_CommonCausality_ptr<float64_t>();
-        caus_a->Float64->start = std::make_shared<std::vector<float64_t>>();
-        caus_a->Float64->start->push_back(10.0);
+                make_CommonCausality_String_ptr();
+		caus_a->String->maxSize = std::make_shared<uint32_t>(2000);
+        caus_a->String->start = std::make_shared<std::string>("input_start");
+		// ?
+        //caus_a->String->start = std::make_shared<std::vector<std::string>>();
+		//std::string tmp = "input_start" 
+        //caus_a->String->start->push_back(tmp);
+
         slaveDescription.Variables.push_back(make_Variable_input("a", a_vr, caus_a));
         slaveDescription.Log = make_Log_ptr();
         slaveDescription.Log->categories.push_back(make_Category(1, "DCP_SLAVE"));
@@ -144,9 +163,11 @@ private:
             "[Time = %float64]: sin(%uint64 + %float64) = %float64",
             {DcpDataType::float64, DcpDataType::uint64, DcpDataType::float64, DcpDataType::float64});
 
-    float64_t *a;
+    //float64_t *a;
+	std::string *a;
     const uint32_t a_vr = 2;
-    float64_t *y;
+    //float64_t *y;
+	std::string *y;
     const uint32_t y_vr = 1;
 
 };

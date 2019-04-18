@@ -23,12 +23,12 @@
     <Variables>
         <Variable name="y" valueReference="1">
             <Output>
-                <Float64 start="10.0"/>
+                <String />
             </Output>
         </Variable>
         <Variable name="a" valueReference="2">
             <Input>
-                <Float64 start="0"/>
+                <String start="input_start"/>
             </Input>
         </Variable>
     </Variables>
