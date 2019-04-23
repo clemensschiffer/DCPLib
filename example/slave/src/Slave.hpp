@@ -56,9 +56,11 @@ public:
         currentStep = 0;
 
         //a = manager->getInput<float64_t *>(a_vr);
-        a = manager->getInput<std::string *>(a_vr);
+        a = manager->getInput<char*>(a_vr);
+		aStr = new DcpString(a);
         //y = manager->getOutput<float64_t *>(y_vr);
-        y = manager->getOutput<std::string *>(y_vr);
+        y = manager->getOutput<char*>(y_vr);
+		yStr = new DcpString(y);
     }
 
     void initialize() {
@@ -73,8 +75,15 @@ public:
         //*y = std::sin(currentStep + *a);
 		std::string tmp = "foo";
 		//*y = tmp;
-		std::cout << "Value of output " << *y << std::endl;
-		std::cout << "Value of input"   << *a << std::endl;
+		std::cout << "Value of output " << yStr->getString() << std::endl;
+		std::cout << "Value of input "   << aStr->getString() << std::endl;
+        if(aStr->getString() ==  "foo"){
+			tmp= "boo";
+        }
+        if(aStr->getString() ==  "boo"){
+			tmp= "foo";
+        }
+		yStr->setString(tmp);
 
 		//tmp = *a;
 		//*y = tmp + "a";
@@ -103,11 +112,9 @@ public:
                 make_Control_ptr(HOST, 8080);
         ;
         slaveDescription.TransportProtocols.UDP_IPv4->DAT_input_output = make_DAT_ptr();
-        slaveDescription.TransportProtocols.UDP_IPv4->DAT_input_output->availablePortRanges.push_back(
-                make_AvailablePortRange(2048, 65535));
+        slaveDescription.TransportProtocols.UDP_IPv4->DAT_input_output->availablePortRanges.push_back(make_AvailablePortRange(2048, 65535));
         slaveDescription.TransportProtocols.UDP_IPv4->DAT_parameter = make_DAT_ptr();
-        slaveDescription.TransportProtocols.UDP_IPv4->DAT_parameter->availablePortRanges.push_back(
-                make_AvailablePortRange(2048, 65535));
+        slaveDescription.TransportProtocols.UDP_IPv4->DAT_parameter->availablePortRanges.push_back(make_AvailablePortRange(2048, 65535));
         slaveDescription.CapabilityFlags.canAcceptConfigPdus = true;
         slaveDescription.CapabilityFlags.canHandleReset = true;
         slaveDescription.CapabilityFlags.canHandleVariableSteps = true;
@@ -164,10 +171,13 @@ private:
             {DcpDataType::float64, DcpDataType::uint64, DcpDataType::float64, DcpDataType::float64});
 
     //float64_t *a;
-	std::string *a;
+	char* a;
+	DcpString* aStr;
     const uint32_t a_vr = 2;
+
     //float64_t *y;
-	std::string *y;
+	char* y;
+	DcpString* yStr;
     const uint32_t y_vr = 1;
 
 };
