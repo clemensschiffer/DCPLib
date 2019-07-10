@@ -19,7 +19,15 @@ class Slave {
 public:
     Slave() : stdLog(std::cout) {
         udpDriver = new UdpDriver(HOST, PORT);
-        manager = new DcpManagerSlave(getSlaveDescription(), udpDriver->getDcpDriver());
+		SlaveDescription_t SD = getSlaveDescription();
+		std::cout << "Description ready" << std::endl;
+		//a->maxSize = std::make_shared<uint32_t>(0);
+		//*a->maxSize=100;
+		//*y->maxSize=100;
+		//y->maxSize = std::make_shared<uint32_t>(0);
+		std::cout << "start new manager" << std::endl;
+        manager = new DcpManagerSlave(SD, udpDriver->getDcpDriver());
+		std::cout << "new manager" << std::endl;
         manager->setInitializeCallback<SYNC>(
                 std::bind(&Slave::initialize, this));
         manager->setConfigureCallback<SYNC>(
@@ -51,22 +59,40 @@ public:
         simulationTime = 0;
         currentStep = 0;
 
-        a = manager->getInput<float64_t *>(a_vr);
-        y = manager->getOutput<float64_t *>(y_vr);
+        a = manager->getInput<uint8_t *>(a_vr);
+		a_bin = new DcpBinary(a);
+        y = manager->getOutput<uint8_t *>(y_vr);
+		y_bin = new DcpBinary(y);
     }
 
     void initialize() {
-        *y = std::sin(currentStep + *a);
+        //*y = std::sin(currentStep + *a);
+		uint8_t val[] = {0,1,2,3,4};
+		//a = val;
+		//*y = *a;
+		a_bin->setBinary(5,val);
+		y_bin->setBinary(5,val);
     }
 
     void doStep(uint64_t steps) {
         float64_t timeDiff =
                 ((double) numerator) / ((double) denominator) * ((double) steps);
 
+		const uint8_t *foo;
+		foo = a_bin->getBinary(); 
+		uint32_t len = a_bin->getSize();
+		std::string msg;
+		for(int i=0;i<len;++i)
+		{
+			msg += " "+ std::to_string(*(foo+i));
+		}
 
-        *y = std::sin(currentStep + *a);
+		std::cout << "Value of input "   << msg << std::endl;
 
-        manager->Log(SIM_LOG, simulationTime, currentStep, *a, *y);
+		uint8_t val[] = {foo[0] +0x02,1,2,3,(uint8_t) currentStep};
+		y_bin->setBinary(5,val);
+        //*y = *a;
+        //manager->Log(SIM_LOG, simulationTime, currentStep, *a, *y);
         simulationTime += timeDiff;
         currentStep += steps;
     }
@@ -103,13 +129,18 @@ public:
         slaveDescription.CapabilityFlags.canProvideLogOnRequest = true;
         slaveDescription.CapabilityFlags.canProvideLogOnNotification = true;
 
-        std::shared_ptr<Output_t> caus_y = make_Output_ptr<float64_t>();
+        std::shared_ptr<Output_t> caus_y = make_Output_Binary_ptr();
+		std::cout << "Made Bin out" << std::endl;
         slaveDescription.Variables.push_back(make_Variable_output("y", y_vr, caus_y));
         std::shared_ptr<CommonCausality_t> caus_a =
-                make_CommonCausality_ptr<float64_t>();
-        caus_a->Float64->start = std::make_shared<std::vector<float64_t>>();
-        caus_a->Float64->start->push_back(10.0);
+                make_CommonCausality_Binary_ptr();
+		caus_a->Binary->maxSize = std::make_shared<uint32_t>(2000);
+		caus_y->Binary->maxSize = std::make_shared<uint32_t>(2000);
+		std::cout << "Made Bin CommonCaus" << std::endl;
+        //caus_a->Binary->start = std::make_shared<std::vector<float64_t>>();
+        //caus_a->->start->push_back(10.0);
         slaveDescription.Variables.push_back(make_Variable_input("a", a_vr, caus_a));
+		std::cout << "Made Var input" << std::endl;
         slaveDescription.Log = make_Log_ptr();
         slaveDescription.Log->categories.push_back(make_Category(1, "DCP_SLAVE"));
         slaveDescription.Log->templates.push_back(make_Template(
@@ -137,9 +168,14 @@ private:
             "[Time = %float64]: sin(%uint64 + %float64) = %float64",
             {DcpDataType::float64, DcpDataType::uint64, DcpDataType::float64, DcpDataType::float64});
 
-    float64_t *a;
+    //float64_t *a;
+    //BinaryDataType_t *a;
+    //BinaryDataType_t *y;
+    uint8_t *a;
+    uint8_t *y;
+    DcpBinary *a_bin;
+    DcpBinary *y_bin;
     const uint32_t a_vr = 2;
-    float64_t *y;
     const uint32_t y_vr = 1;
 
 };

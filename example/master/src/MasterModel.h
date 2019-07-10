@@ -77,7 +77,7 @@ private:
 
         manager->CFG_scope(1, 1, DcpScope::Initialization_Run_NonRealTime);
 
-        manager->CFG_input(1, 1, 0, slaveDescription->Variables.at(1).valueReference, DcpDataType::float64);
+        manager->CFG_input(1, 1, 0, slaveDescription->Variables.at(1).valueReference, DcpDataType::binary);
         manager->CFG_output(1, 1, 0, slaveDescription->Variables.at(0).valueReference);
 
         manager->CFG_steps(1, 1, 1);
