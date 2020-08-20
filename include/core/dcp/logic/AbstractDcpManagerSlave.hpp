@@ -1998,7 +1998,7 @@ protected:
                     if (!slavedescription::isTimeResolutionSupported(slaveDescription, setTimeRes.getNumerator(),
                                                                      setTimeRes.getDenominator())) {
 #if defined(DEBUG) || defined(LOGGING)
-                        Log(INVALID_TIME_RESOLUTION, setTimeRes.getNumerator(), setTimeRes.getNumerator(),
+                        Log(INVALID_TIME_RESOLUTION, setTimeRes.getNumerator(), setTimeRes.getDenominator(),
                             slavedescription::supportedTimeResolutions(slaveDescription));
 #endif
                         if (error == DcpError::NONE) {
