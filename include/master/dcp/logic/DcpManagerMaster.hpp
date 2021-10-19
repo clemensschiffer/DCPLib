@@ -93,7 +93,7 @@ public:
             case DcpPduType::DAT_input_output:{
                 DcpPduDatInputOutput &data = static_cast<DcpPduDatInputOutput &>(msg);
                 if(checkSeqIdInOut(data.getDataId(), data.getPduSeqId()) != 1){
-                    if (synchronousCallback[DcpCallbackTypes::PDU_MISSED]) {
+                    if (synchronousCallback[DcpCallbackTypes::IN_OUT_MISSED]) {
                         inputOutputPduMissedListener(data.getDataId());
                     } else {
                         std::thread t(inputOutputPduMissedListener, data.getDataId());
@@ -113,8 +113,10 @@ public:
                 } else if(lastClearSeq[ack.getSender()] == ack.getRespSeqId()){
                     segNumsOut[ack.getSender()] = lastRegisterSuccessfullSeq[ack.getSender()] + 1;
                     segNumsIn[ack.getSender()] = lastRegisterSuccessfullSeq[ack.getSender()];
+                    // TODO dataSegNums maps dataId to seq not slave! rm these 2 lines
                     dataSegNumsOut[ack.getSender()] = 0;
                     dataSegNumsIn[ack.getSender()] = 0;
+                    // what should be done instead?
                     lastRegisterSeq[ack.getSender()] = 0;
                     lastClearSeq[ack.getSender()] = 0;
                 }
@@ -140,7 +142,7 @@ public:
             }
             case DcpPduType::RSP_state_ack: {
                 DcpPduRspStateAck &stateAck = static_cast<DcpPduRspStateAck &>(msg);
-                if (synchronousCallback[DcpCallbackTypes::NACK]) {
+                if (synchronousCallback[DcpCallbackTypes::STATE_ACK]) {
                     stateAckReceivedListener(stateAck.getSender(),
                                              stateAck.getRespSeqId(), stateAck.getStateId());
                 } else {
@@ -153,7 +155,7 @@ public:
             case DcpPduType::RSP_error_ack: {
                 DcpPduRspNack &errorAck = static_cast<DcpPduRspNack &>(msg);
                 DcpPduRspStateAck &stateAck = static_cast<DcpPduRspStateAck &>(msg);
-                if (synchronousCallback[DcpCallbackTypes::NACK]) {
+                if (synchronousCallback[DcpCallbackTypes::ERROR_ACK]) {
                     errorAckReceivedListener(errorAck.getSender(),
                                              errorAck.getRespSeqId(), errorAck.getErrorCode());
                 } else {
@@ -198,7 +200,7 @@ public:
             case DcpPduType::NTF_state_changed: {
                 DcpPduNtfStateChanged &stateChanged =
                         static_cast<DcpPduNtfStateChanged &>(msg);
-                if (synchronousCallback[DcpCallbackTypes::NACK]) {
+                if (synchronousCallback[DcpCallbackTypes::STATE_CHANGED]) {
                     stateChangedNotificationReceivedListener(stateChanged.getSender(),
                                                              stateChanged.getStateId());
                 } else {
@@ -237,7 +239,7 @@ public:
             }
             case DcpPduType::DAT_input_output: {
                 DcpPduDatInputOutput &data = static_cast<DcpPduDatInputOutput &>(msg);
-                if (synchronousCallback[DcpCallbackTypes::NACK]) {
+                if (synchronousCallback[DcpCallbackTypes::DATA]) {
                     dataReceivedListener(data.getDataId(), data.getPduSize() - data.getCorrectSize(), data.getPayload());
                 } else {
                     std::thread t(dataReceivedListener, data.getDataId(), data.getPduSize() - data.getCorrectSize(), data.getPayload());

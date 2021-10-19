@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, FG Simulation und Modellierung, Leibniz Universit‰t Hannover, Germany
+ * Copyright (C) 2019, FG Simulation und Modellierung, Leibniz Universit√§t Hannover, Germany
  *
  * All rights reserved.
  *
@@ -50,11 +50,9 @@
 #include <dcp/logic/AbstractDcpManager.hpp>
 #include <dcp/xml/DcpSlaveDescriptionElements.hpp>
 
-#if defined(DEBUG) || defined(LOGGING)
 #include <dcp/logic/DCPSlaveErrorCodes.hpp>
 #include <dcp/model/pdu/DcpPduRspErrorAck.hpp>
 
-#endif
 
 #ifdef ERROR
 /* windows has already an error define */
@@ -141,7 +139,11 @@ public:
                 }
                 notifyStateChange();
                 DcpPduStcRun &_run = static_cast<DcpPduStcRun &>(msg);
-                if (opMode != DcpOpMode::NRT) {
+                if (opMode == DcpOpMode::NRT) {
+                    if (state == DcpState::SYNCHRONIZING) {
+                        synchronize();
+                    }
+                } else {
                     notifyRuntimeListener(_run.getStartTime());
                     run(_run.getStartTime());
                 }
@@ -293,12 +295,19 @@ public:
                     std::pair<uint64_t, DcpDataType> p = vrsToReceive[i];
                     uint64_t valueReference = p.first;
                     DcpDataType sourceDataType = p.second;
-
-                    offset += values[valueReference]->update(data.getPayload(), offset, sourceDataType);
+                    try {
+                        offset += values[valueReference]->update(data.getPayload(), offset, sourceDataType);
+                    }
+                    catch (std::range_error) {
+#ifdef DEBUG
+                        Log(INVALID_PAYLOAD, valueReference);
+#endif
+                    }
 #ifdef DEBUG
                     Log(ASSIGNED_INPUT, valueReference, sourceDataType,
                         slavedescription::getDataType(slaveDescription, valueReference));
 #endif
+                    notifyInputOutputUpdateListener(valueReference);
                 }
                 break;
             }
@@ -337,7 +346,14 @@ public:
                         updateStructualDependencies(valueReference, value);
                     } else {
                         checkForUpdatedStructure(valueReference);
-                        offset += values[valueReference]->update(param.getConfiguration(), offset, sourceDataType);
+                        try {
+                            offset += values[valueReference]->update(param.getConfiguration(), offset, sourceDataType);
+                        }
+                        catch (std::range_error) {
+#ifdef DEBUG
+                            Log(INVALID_PAYLOAD, valueReference);
+#endif
+                        }
                     }
                 }
                 break;
@@ -370,8 +386,15 @@ public:
                     updateStructualDependencies(valueReference, value);
                 } else {
                     checkForUpdatedStructure(parameter.getParameterVr());
-                    values[valueReference]->update(parameter.getConfiguration(), 0,
-                                                   slavedescription::getDataType(slaveDescription, valueReference));
+                    try {
+                        values[valueReference]->update(parameter.getConfiguration(), 0,
+                                                       slavedescription::getDataType(slaveDescription, valueReference));
+                    }
+                    catch (std::range_error) {
+#ifdef DEBUG
+                        Log(INVALID_PAYLOAD, valueReference);
+#endif
+                    }
                 }
                 break;
             }
@@ -727,11 +750,18 @@ protected:
         stateChangePossible[DcpState::RUNNING][DcpPduType::DAT_input_output] = true;
         stateChangePossible[DcpState::RUNNING][DcpPduType::DAT_parameter] = true;
 
-        stateChangePossible[DcpState::COMPUTING][DcpPduType::STC_send_outputs] = true;
+        stateChangePossible[DcpState::COMPUTING][DcpPduType::STC_stop] = true;
         stateChangePossible[DcpState::COMPUTING][DcpPduType::INF_state] = true;
         stateChangePossible[DcpState::COMPUTING][DcpPduType::INF_log] = true;
         stateChangePossible[DcpState::COMPUTING][DcpPduType::DAT_input_output] = true;
         stateChangePossible[DcpState::COMPUTING][DcpPduType::DAT_parameter] = true;
+
+        stateChangePossible[DcpState::COMPUTED][DcpPduType::STC_send_outputs] = true;
+        stateChangePossible[DcpState::COMPUTED][DcpPduType::STC_stop] = true;
+        stateChangePossible[DcpState::COMPUTED][DcpPduType::INF_state] = true;
+        stateChangePossible[DcpState::COMPUTED][DcpPduType::INF_log] = true;
+        stateChangePossible[DcpState::COMPUTED][DcpPduType::DAT_input_output] = true;
+        stateChangePossible[DcpState::COMPUTED][DcpPduType::DAT_parameter] = true;
 
         stateChangePossible[DcpState::SENDING_D][DcpPduType::INF_state] = true;
         stateChangePossible[DcpState::SENDING_D][DcpPduType::INF_log] = true;
@@ -857,7 +887,7 @@ protected:
                         } else {
                             baseSize = 4294967295 + 4;
                         }
-
+                        break;
                     case DcpDataType::string:
                         if (var.Input.get()->String.get()->maxSize != nullptr) {
                             baseSize = *var.Input.get()->String.get()->maxSize;
@@ -1014,8 +1044,8 @@ protected:
                     case DcpDataType::binary: {
                         if (var.Input.get()->Binary.get()->start.get() != nullptr) {
                             std::shared_ptr<BinaryStartValue> startValue = var.Input.get()->Binary.get()->start;
-                            DcpBinary startBinary(startValue->length, startValue->value, baseSize - 4);
-                            values[valueReference]->update(startBinary.getBinary(), 0, DcpDataType::binary);
+                            DcpBinary startBinary(startValue->length, startValue->value, baseSize);
+                            values[valueReference]->update(startBinary.getPayload(), 0, DcpDataType::binary);
                         }
                         break;
                     }
@@ -1031,7 +1061,7 @@ protected:
                         } else {
                             baseSize = 4294967295 + 4;
                         }
-
+                        break;
                     case DcpDataType::string:
                         if (var.Output.get()->String.get()->maxSize != nullptr) {
                             baseSize = *var.Output.get()->String.get()->maxSize;
@@ -1187,8 +1217,8 @@ protected:
                     case DcpDataType::binary: {
                         if (var.Output.get()->Binary.get()->start.get() != nullptr) {
                             std::shared_ptr<BinaryStartValue> startValue = var.Output.get()->Binary.get()->start;
-                            DcpBinary startBinary(startValue->length, startValue->value, baseSize - 4);
-                            values[valueReference]->update(startBinary.getBinary(), 0, DcpDataType::binary);
+                            DcpBinary startBinary(startValue->length, startValue->value, baseSize);
+                            values[valueReference]->update(startBinary.getPayload(), 0, DcpDataType::binary);
                         }
                         break;
                     }
@@ -1359,8 +1389,8 @@ protected:
                     case DcpDataType::binary: {
                         if (var.Parameter.get()->Binary.get()->start.get() != nullptr) {
                             std::shared_ptr<BinaryStartValue> startValue = var.Parameter.get()->Binary.get()->start;
-                            DcpBinary startBinary(startValue->length, startValue->value, baseSize - 4);
-                            values[valueReference]->update(startBinary.getBinary(), 0, DcpDataType::binary);
+                            DcpBinary startBinary(startValue->length, startValue->value, baseSize);
+                            values[valueReference]->update(startBinary.getPayload(), 0, DcpDataType::binary);
                         }
                         break;
                     }
@@ -1484,7 +1514,9 @@ protected:
                 uint16_t diff = checkSeqIdInOut(dcpPduDatInputOutput.getDataId(), dcpPduDatInputOutput.getPduSeqId());
                 if (diff != 1) {
                     notifyMissingInputOutputPduListener(dcpPduDatInputOutput.getDataId());
+#if defined(DEBUG) || defined(LOGGING)
                     Log(IN_OUT_PDU_MISSED);
+#endif
                 }
                 if(maxConsecMissedPduData[dcpPduDatInputOutput.getDataId()] > 0 && maxConsecMissedPduData[dcpPduDatInputOutput.getDataId()] < diff){
                     gotoErrorHandling();
@@ -1499,7 +1531,9 @@ protected:
                 uint16_t diff = checkSeqIdParam(dcpPduDatParameter.getParamId(), dcpPduDatParameter.getPduSeqId());
                 if (diff != 1) {
                     notifyMissingParameterPduListener(dcpPduDatParameter.getParamId());
+#if defined(DEBUG) || defined(LOGGING)
                     Log(PARAM_PDU_MISSED);
+#endif
                 }
                 if(maxConsecMissedPduParam[dcpPduDatParameter.getParamId()] > 0 && maxConsecMissedPduParam[dcpPduDatParameter.getParamId()] < diff){
                     gotoErrorHandling();
@@ -1515,7 +1549,9 @@ protected:
                     if (diff != 1) {
                         error = DcpError::INVALID_SEQUENCE_ID;
                         notifyMissingControlPduListener();
+#if defined(DEBUG) || defined(LOGGING)
                         Log(CTRL_PDU_MISSED);
+#endif
                     }
                 }
                 break;
@@ -1563,7 +1599,7 @@ protected:
                                 correctLength += *((uint16_t *) (aciPduData.getPayload() + correctLength)) + 4;
                                 break;
                             default:
-                                correctLength += getDcpDataTypeSize(pos.second.second);
+                                correctLength += values[pos.second.first]->getPayloadSize();
                         }
                     }
                     if (aciPduData.getPduSize() != (correctLength + 5)) {
@@ -1585,7 +1621,7 @@ protected:
                                 correctLength += *((uint16_t *) (aciPduParam.getConfiguration()));
                                 break;
                             default:
-                                correctLength += getDcpDataTypeSize(pos.second.second);
+                                correctLength += values[pos.second.first]->getPayloadSize();
                                 break;
                         }
                     }
@@ -2484,6 +2520,8 @@ case DcpDataType::input: \
     virtual void notifyMissingInputOutputPduListener(uint16_t dataId) = 0;
 
     virtual void notifyMissingParameterPduListener(uint16_t paramId) = 0;
+
+    virtual void notifyInputOutputUpdateListener(uint64_t valueReference) = 0;
 
     virtual void prepare() = 0;
 

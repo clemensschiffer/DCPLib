@@ -145,13 +145,23 @@ public:
             INNER_SWITCH_END
             case DcpDataType::binary:
             case DcpDataType::string:
+                bool invalidPayload = false;
                 for (int i = 0; i < numberOfAssignments; i++) {
                         uint32_t& length = *((uint32_t*)(payload + offset));
                         uint32_t& newLength = *((uint32_t*)(newPayload + (start + otherOffset)));
-                        length = newLength;
-                        std::memcpy(payload + (offset + 4), newPayload + (start + otherOffset + 4), newLength);
+                        if (newLength <= baseSize) {
+                            length = newLength;
+                        }
+                        else {
+                            length = baseSize;
+                            invalidPayload = true;
+                        }
+                        std::memcpy(payload + (offset + 4), newPayload + (start + otherOffset + 4), length);
                         offset += baseSize;
                         otherOffset += (newLength + 4);
+                }
+                if(invalidPayload) {
+                    throw std::range_error("maxSize exceeded");
                 }
                 break;
         }
@@ -193,6 +203,10 @@ public:
 
     inline size_t getBaseSize(){
         return baseSize;
+    }
+
+    inline size_t getPayloadSize(){
+        return baseSize * numberOfAssignments;
     }
 
     template<typename T>
