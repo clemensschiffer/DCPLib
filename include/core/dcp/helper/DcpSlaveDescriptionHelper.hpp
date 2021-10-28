@@ -293,6 +293,8 @@ namespace slavedescription {
             return true;
         } else if (slaveDescription.OpMode.NonRealTime != nullptr && opMode == DcpOpMode::NRT) {
             return true;
+        } else if (slaveDescription.OpMode.NonRealTime2 != nullptr && opMode == DcpOpMode::NRT2) {
+            return true;
         }
         return false;
     }

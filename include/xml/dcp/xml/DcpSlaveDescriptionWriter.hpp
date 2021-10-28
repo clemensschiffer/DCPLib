@@ -981,6 +981,16 @@ static std::string to_string(OpMode_t opMode) {
         str += "/>";
         NEWLINE(str)
     }
+    if (opMode.NonRealTime2 != nullptr) {
+        str += "\t\t<NonRealTime2 ";
+        TO_STRING_ATTR_WITH_DEFAULT_PTR(str, opMode.NonRealTime2, defaultSteps, 1)
+            TO_STRING_ATTR_WITH_DEFAULT_BOOL_PTR(str, opMode.NonRealTime2, fixedSteps, true)
+            TO_STRING_ATTR_WITH_DEFAULT_PTR(str, opMode.NonRealTime2, minSteps, 1)
+            TO_STRING_ATTR_WITH_DEFAULT_PTR(str, opMode.NonRealTime2, maxSteps, 1)
+
+            str += "/>";
+        NEWLINE(str)
+    }
 
 
     return str + "\t</OpMode>";

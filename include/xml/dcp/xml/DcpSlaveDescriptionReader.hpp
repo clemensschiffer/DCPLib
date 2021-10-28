@@ -351,12 +351,23 @@ std::shared_ptr<SlaveDescription_t> readSlaveDescription(const char *acuDFile) {
         }
 
     }
+    {
+        PARSE_NODE(OpModeNode, NonRealTime2)
+            if (NonRealTime2Node != nullptr) {
+                slaveDescription->OpMode.NonRealTime2 = make_NonRealTime2_ptr();
+                PARSE_AND_ASSIGN_INT_PTR(NonRealTime2, slaveDescription->OpMode.NonRealTime2, defaultSteps, uint32_t)
+                    PARSE_AND_ASSIGN_BOOL_PTR(NonRealTime2, slaveDescription->OpMode.NonRealTime2, fixedSteps)
+                    PARSE_AND_ASSIGN_INT_PTR(NonRealTime2, slaveDescription->OpMode.NonRealTime2, minSteps, uint32_t)
+                    PARSE_AND_ASSIGN_INT_PTR(NonRealTime2, slaveDescription->OpMode.NonRealTime2, maxSteps, uint32_t)
+            }
+
+    }
 
     // <xs:assert test="(count(./HardRealTime) eq 1) or (count(./SoftRealTime) eq 1) or (count(./NonRealTime) eq 1)"/>
     if (!(slaveDescription->OpMode.HardRealTime != nullptr || slaveDescription->OpMode.SoftRealTime != nullptr ||
-          slaveDescription->OpMode.NonRealTime != nullptr)) {
+          slaveDescription->OpMode.NonRealTime != nullptr || slaveDescription->OpMode.NonRealTime2 != nullptr)) {
         throw std::invalid_argument("Assert \"(count(./HardRealTime) eq 1) or (count(./SoftRealTime) eq 1) or "
-                                    "(count(./NonRealTime) eq 1)\" violated");
+                                    "(count(./NonRealTime) eq 1) or (count(./NonRealTime2) eq 1)\" violated");
     }
 
     /*****************************

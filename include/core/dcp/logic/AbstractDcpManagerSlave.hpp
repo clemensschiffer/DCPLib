@@ -139,7 +139,7 @@ public:
                 }
                 notifyStateChange();
                 DcpPduStcRun &_run = static_cast<DcpPduStcRun &>(msg);
-                if (opMode == DcpOpMode::NRT) {
+                if (opMode == DcpOpMode::NRT || opMode == DcpOpMode::NRT2) {
                     if (state == DcpState::SYNCHRONIZING) {
                         synchronize();
                     }
@@ -1563,7 +1563,7 @@ protected:
 
         if(error == DcpError::NONE){
             //check support
-            if (opMode != DcpOpMode::NRT) {
+            if (opMode != DcpOpMode::NRT && opMode != DcpOpMode::NRT2) {
                 switch (msg.getTypeId()) {
                     case DcpPduType::STC_do_step:
 #if defined(DEBUG) || defined(LOGGING)
@@ -1939,7 +1939,7 @@ protected:
                 case DcpPduType::STC_run: {
                     DcpPduStcRun &runPDU = static_cast<DcpPduStcRun &>(msg);
                     int64_t time_since_epoch = std::chrono::seconds(std::time(NULL)).count();
-                    if (opMode != DcpOpMode::NRT
+                    if (opMode != DcpOpMode::NRT && opMode != DcpOpMode::NRT2
                         && (runPDU.getStartTime() > 0
                             && runPDU.getStartTime()
                                < time_since_epoch)) {

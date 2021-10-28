@@ -63,8 +63,22 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 											<xs:documentation>If fixedCommStepSize is not true.</xs:documentation>
 										</xs:annotation>
 									</xs:attribute>
-
-
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="NonRealTime2" minOccurs="0">
+								<xs:complexType>
+									<xs:attribute name="defaultSteps" type="xs:unsignedInt" default="1"/>
+									<xs:attribute name="fixedSteps" type="xs:boolean" default="true"/>
+									<xs:attribute name="minSteps" type="xs:unsignedInt">
+										<xs:annotation>
+											<xs:documentation>If fixedCommStepSize is not true.</xs:documentation>
+										</xs:annotation>
+									</xs:attribute>
+									<xs:attribute name="maxSteps" type="xs:unsignedInt">
+										<xs:annotation>
+											<xs:documentation>If fixedCommStepSize is not true.</xs:documentation>
+										</xs:annotation>
+									</xs:attribute>
 								</xs:complexType>
 							</xs:element>
 						</xs:sequence>
