@@ -267,7 +267,7 @@ public:
             return false;
         }
 
-        if (opMode == DcpOpMode::NRT) {
+        if (opMode == DcpOpMode::NRT || opMode == DcpOpMode::NRT2) {
             computingFinished();
         } else {
             realtimeStepFinished();
@@ -747,7 +747,15 @@ protected:
     }
 
     virtual void computingFinished() {
-        routineFinished<DcpState::COMPUTING, DcpState::COMPUTED>(COMPUTING_FINISHED, COMPUTING_INTERRUPTED);
+        if (opMode == DcpOpMode::NRT)
+        {
+            routineFinished<DcpState::COMPUTING, DcpState::COMPUTED>(COMPUTING_FINISHED, COMPUTING_INTERRUPTED);
+        }
+        else
+        { 
+            routineFinished<DcpState::COMPUTING, DcpState::RUNNING>(COMPUTING_FINISHED, COMPUTING_INTERRUPTED);
+            sendOutputs(runningScope);
+        }
     }
 
     /**************************

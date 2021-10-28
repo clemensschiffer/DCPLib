@@ -35,8 +35,24 @@ struct NonRealTime_t {
     steps_t maxSteps;
 };
 
+struct NonRealTime2_t {
+    steps_t defaultSteps;
+    bool fixedSteps;
+    steps_t minSteps;
+    steps_t maxSteps;
+};
+
 static std::shared_ptr<NonRealTime_t> make_NonRealTime_ptr() {
     std::shared_ptr<NonRealTime_t> ptr = std::make_shared<NonRealTime_t>();
+    ptr->defaultSteps = 1;
+    ptr->fixedSteps = true;
+    ptr->minSteps = 1;
+    ptr->maxSteps = 1;
+    return ptr;
+}
+
+static std::shared_ptr<NonRealTime2_t> make_NonRealTime2_ptr() {
+    std::shared_ptr<NonRealTime2_t> ptr = std::make_shared<NonRealTime2_t>();
     ptr->defaultSteps = 1;
     ptr->fixedSteps = true;
     ptr->minSteps = 1;
@@ -48,10 +64,11 @@ struct OpMode_t {
     std::shared_ptr<HardRealTime_t> HardRealTime;
     std::shared_ptr<SoftRealTime_t> SoftRealTime;
     std::shared_ptr<NonRealTime_t> NonRealTime;
+    std::shared_ptr<NonRealTime2_t> NonRealTime2;
 };
 
 static OpMode_t make_OpMode() {
-    return {nullptr, nullptr, nullptr};
+    return {nullptr, nullptr, nullptr,nullptr};
 }
 
 
