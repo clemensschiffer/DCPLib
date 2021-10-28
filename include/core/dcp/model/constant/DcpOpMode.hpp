@@ -34,6 +34,8 @@ enum class DcpOpMode : uint8_t {
      * is required.
      */
     NRT = 2,
+
+    NRT2 = 3
 };
 
 
@@ -50,6 +52,8 @@ static std::ostream &operator<<(std::ostream &os, DcpOpMode opMode) {
             return os << "SRT";
         case DcpOpMode::NRT:
             return os << "NRT";
+        case DcpOpMode::NRT2:
+            return os << "NRT2";
         default:
             return os << "UNKNOWN(" << (unsigned((uint8_t) opMode)) << ")";
     }
