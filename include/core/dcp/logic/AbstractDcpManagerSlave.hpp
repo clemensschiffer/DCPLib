@@ -151,7 +151,14 @@ public:
             }
             case DcpPduType::STC_do_step: {
                 runLastExitPoint = state;
-                state = DcpState::COMPUTING;
+                if (opMode == DcpOpMode::NRT) {
+                    state = DcpState::COMPUTING;
+                }
+                else
+                { 
+                    // (opMode == DcpOpMode::NRT2)
+                    state = DcpState::COMPUTE_SEND;
+                }
                 notifyStateChange();
                 DcpPduStcDoStep &doStepPdu = static_cast<DcpPduStcDoStep &>(msg);
                 doStep(doStepPdu.getSteps());
@@ -767,6 +774,12 @@ protected:
         stateChangePossible[DcpState::SENDING_D][DcpPduType::INF_log] = true;
         stateChangePossible[DcpState::SENDING_D][DcpPduType::DAT_input_output] = true;
         stateChangePossible[DcpState::SENDING_D][DcpPduType::DAT_parameter] = true;
+
+        stateChangePossible[DcpState::COMPUTE_SEND][DcpPduType::STC_stop] = true;
+        stateChangePossible[DcpState::COMPUTE_SEND][DcpPduType::INF_state] = true;
+        stateChangePossible[DcpState::COMPUTE_SEND][DcpPduType::INF_log] = true;
+        stateChangePossible[DcpState::COMPUTE_SEND][DcpPduType::DAT_input_output] = true;
+        stateChangePossible[DcpState::COMPUTE_SEND][DcpPduType::DAT_parameter] = true;
 
         stateChangePossible[DcpState::STOPPING][DcpPduType::INF_state] = true;
         stateChangePossible[DcpState::STOPPING][DcpPduType::INF_log] = true;

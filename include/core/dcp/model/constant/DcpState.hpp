@@ -126,6 +126,10 @@ enum class DcpState : uint8_t {
      * The DCP slave has finished its error handling procedure and successfully mitigated the hazardous condition.
      */
     ERROR_RESOLVED = 0x12,
+    /**
+     * Combination of computing, computed and sending_d to a single state only in operating mode NRT2.
+     */
+        COMPUTE_SEND = 0x13,
 };
 
 /**
@@ -173,6 +177,8 @@ static std::ostream &operator<<(std::ostream &os, DcpState type) {
             return os << "ERROR_HANDLING";
         case DcpState::ERROR_RESOLVED:
             return os << "ERROR_HANDLING";
+        case DcpState::COMPUTE_SEND:
+            return os << "COMPUTE_SEND";
         default:
             return os << "UNKNOWN(" << (unsigned((uint8_t) type)) << ")";
     }
