@@ -753,8 +753,8 @@ protected:
         }
         else
         { 
-            routineFinished<DcpState::COMPUTING, DcpState::RUNNING>(COMPUTING_FINISHED, COMPUTING_INTERRUPTED);
             sendOutputs(runningScope);
+            routineFinished<DcpState::COMPUTING, DcpState::RUNNING>(COMPUTING_FINISHED, COMPUTING_INTERRUPTED);
         }
     }
 
